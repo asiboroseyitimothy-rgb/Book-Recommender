@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Book Recommender — Home</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#f0f4f8; margin:0; padding:20px; }
+  header{background:#87cefa;color:white;padding:20px;text-align:center;border-radius:8px;}
+  .instructions{max-width:900px;margin:16px auto;text-align:center;color:#111;}
+  .search-bar{max-width:420px;margin:10px auto;display:flex;gap:6px;}
+  .search-bar input{flex:1;padding:8px;border-radius:20px;border:1px solid #ccc;padding-left:12px;}
+  .books-grid{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;margin-top:18px;}
+  .book-card{width:200px;background:white;padding:12px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.08);transition:all .25s;cursor:pointer;position:relative;text-align:center;}
+  .book-card:hover{transform:scale(1.03);background:#eaf7ff;}
+  .book-title{font-weight:700;color:#032; margin-bottom:6px;}
+  .book-author,.book-desc{font-size:0.9rem;color:#555;margin-bottom:6px;}
+  .read-btn{display:inline-block;margin-top:8px;padding:7px 10px;background:#0288d1;color:#fff;border-radius:6px;text-decoration:none;}
+  .hidden-checkbox{display:none;}
+  .selected{outline:3px solid #87CEFA;}
+  .submit-row{text-align:center;margin-top:18px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Book Recommender</h1>
+  <p>Welcome — search, select books and get recommendations. Click <strong>Read</strong> to open the linked book.</p>
+</header>
+
+<div class="instructions">
+  <input id="searchInput" class="search-bar-input" placeholder="Search by title, author or description" style="width:60%;padding:8px;border-radius:20px;border:1px solid #ccc;">
+</div>
+
+<form method="POST" action="{{ url_for('recommend') }}">
+  <div class="books-grid" id="booksGrid">
+    {% for book in books %}
+      <label class="book-card" data-title="{{ (book.Title or '')|lower }}" data-author="{{ (book.Author or '')|lower }}" data-desc="{{ (book.Description or '')|lower }}">
+        <input type="checkbox" class="hidden-checkbox" name="book" value="{{ book.book_id }}">
+        <div class="book-title">{{ book.Title or 'Unknown Title' }}</div>
+        <div class="book-author">{{ book.Author or 'Unknown Author' }}</div>
+        <div class="book-desc">{{ (book.Description[:100] + '...') if book.Description else '' }}</div>
+
+        {% if book.Link %}
+          {% set link = book.Link %}
+          {% if link[:7] == 'static/' %}
+            <a class="read-btn" href="{{ url_for('static', filename=link[7:]) }}" target="_blank" rel="noopener">Read</a>
+          {% else %}
+            <a class="read-btn" href="{{ link }}" target="_blank" rel="noopener">Read</a>
+          {% endif %}
+        {% else %}
+          <button class="read-btn" type="button" disabled style="opacity:0.6;cursor:not-allowed;">No link</button>
+        {% endif %}
+      </label>
+    {% endfor %}
+  </div>
+
+  <div class="submit-row">
+    <button type="submit" style="padding:10px 20px;background:#0288d1;color:white;border:none;border-radius:8px;cursor:pointer;">Get Recommendations</button>
+  </div>
+</form>
+
+<script>
+  // Toggle checkbox when card clicked and highlight
+  document.querySelectorAll('.book-card').forEach(card=>{
+    card.addEventListener('click', function(e){
+      // If a link was clicked, don't toggle selection
+      if(e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+      const cb = card.querySelector('.hidden-checkbox');
+      cb.checked = !cb.checked;
+      card.classList.toggle('selected', cb.checked);
+    });
+  });
+
+  // Live search
+  const search = document.getElementById('searchInput');
+  search.addEventListener('input', function(){
+    const q = this.value.trim().toLowerCase();
+    document.querySelectorAll('.book-card').forEach(card=>{
+      const t = card.dataset.title || '';
+      const a = card.dataset.author || '';
+      const d = card.dataset.desc || '';
+      if(!q || t.includes(q) || a.includes(q) || d.includes(q)){
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+</script>
+</body>
+</html>
