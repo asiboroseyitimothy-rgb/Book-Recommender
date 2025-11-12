@@ -95,8 +95,6 @@ def login():
     return render_template('login.html', error=error)
 
 
-# Load book data
-books_df = pd.read_excel('books.xlsx')
 
 # Optional: check column names to make sure
 print(books_df.columns)
@@ -167,5 +165,10 @@ def recommend():
 
 
 # ---------- RUN APP ----------
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
 if __name__ == '__main__':
     app.run(debug=True)
